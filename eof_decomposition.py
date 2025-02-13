@@ -143,9 +143,6 @@ explained_variance = eof.get_variance_explained()
 print("\nExplained Variance:")
 print(explained_variance)
 
-# %%
-
-
 
 # %%
 import matplotlib.pyplot as plt
