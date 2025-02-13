@@ -1,6 +1,7 @@
 # %%
 # %%
 import numpy as np
+import pandas as pd
 
 class EOFDecomposition:
     """
@@ -25,6 +26,8 @@ class EOFDecomposition:
         self.L = None  # Eigenvectors (EOFs)
         self.U = None  # Diagonal eigenvalues matrix
         self.explained_variance = None  # Explained variance of each mode
+        self.total_variance = None
+        self.P = None
 
    
     def load_csv(self, csv_filename):
@@ -35,6 +38,19 @@ class EOFDecomposition:
             csv_filename (str): Path to the CSV file containing the matrix.
         """
         self.data_matrix = np.genfromtxt(csv_filename, delimiter=',')
+
+        nan_rows = np.isnan(self.data_matrix).any(axis=1)
+        print("Rows with NaN values:", np.where(nan_rows)[0])
+
+        # if np.isnan(self.data_matrix).any():
+        #     self.data_matrix = self.data_matrix[~np.isnan(self.data_matrix).any(axis=1)]
+        #     print(f"NaN rows removed. New shape: {self.data_matrix.shape}")
+
+        # Replace NaN rows by copying the previous row
+        for i in range(1, len(self.data_matrix)):
+            if nan_rows[i]:
+                self.data_matrix[i] = self.data_matrix[i - 1]
+
         print(f"Data matrix loaded from {csv_filename}. Shape: {self.data_matrix.shape}")
 
 
@@ -55,6 +71,7 @@ class EOFDecomposition:
         # Step 2: Compute sample covariance matrix
         N = X.shape[1]  # Number of time steps
         P = (1 / (N - 1)) * X @ X.T  # Sample covariance matrix
+        self.P = P
 
         # Step 3: Eigenvalue decomposition
         eigenvalues, eigenvectors = np.linalg.eigh(P)  # Use eigh (since P is symmetric)
@@ -66,6 +83,7 @@ class EOFDecomposition:
 
         # Step 5: Determine number of EOFs to retain
         total_variance = np.sum(eigenvalues)
+        self.total_variance = total_variance
         explained_variance = np.cumsum(eigenvalues) / total_variance
 
         if r is None:
@@ -101,12 +119,14 @@ class EOFDecomposition:
 
 
 # %%%
-eof = EOFDecomposition(filename="Holland_data/fort61_matrix.csv")
-data_matrix = eof.load_csv('OWI_data/30k_mesh/fort61_matrix.csv')
+eof = EOFDecomposition(filename='data/tides30k.csv')
+data_matrix = eof.load_csv('data/tides30k.csv')
+
 
 # %%
 # Perform EOF decomposition
-eof.compute_eof()
+
+eof.compute_eof(r=288)
 
 # Display the Leading EOFs (L)
 L, _ = eof.get_eofs()  # Get the EOFs (L) and eigenvalues (U)
@@ -124,6 +144,10 @@ print("\nExplained Variance:")
 print(explained_variance)
 
 # %%
+
+
+
+# %%
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -136,18 +160,6 @@ plt.title('Explained Variance by EOF Modes')
 plt.xlabel('EOF Mode')
 plt.ylabel('Explained Variance (%)')
 plt.grid(True)
-plt.show()
-
-#The leading EOFs (L) are typically spatial patterns, and you can plot them to see how they vary 
-# across the nodes. If your data represents some form of geographical information (like water 
-# elevations in ADCIRC), you can use a 2D heatmap or a surface plot to show these spatial patterns.
-
-plt.figure(figsize=(8, 6))
-plt.imshow(L, aspect='auto', cmap='viridis', interpolation='nearest')
-plt.colorbar(label='EOF Amplitude')
-plt.title('Leading EOF Spatial Pattern')
-plt.xlabel('Time Step')
-plt.ylabel('Node')
 plt.show()
 
 # Assume the EOF time series is the projection of the data onto the EOFs
@@ -208,12 +220,5 @@ plt.ylabel('Frequency')
 plt.legend()
 plt.show()
 
-# Plot heatmap for the first EOF mode
-# plt.figure(figsize=(8, 6))
-# plt.imshow(L[:, 0].reshape((int(np.sqrt(L.shape[0])), -1)), cmap='viridis', aspect='auto')
-# plt.colorbar(label='EOF Amplitude')
-# plt.title('Heatmap of the First EOF Mode')
-# plt.xlabel('Grid Points')
-# plt.ylabel('Nodes')
-# plt.show()
-# %%
+
+
