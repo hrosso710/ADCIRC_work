@@ -1,5 +1,4 @@
 # %%
-# %%
 import numpy as np
 import pandas as pd
 
@@ -84,7 +83,7 @@ class EOFDecomposition:
         # Step 5: Determine number of EOFs to retain
         total_variance = np.sum(eigenvalues)
         self.total_variance = total_variance
-        explained_variance = np.cumsum(eigenvalues) / total_variance
+        explained_variance = np.cumsum(eigenvalues) / np.trace(P)
 
         if r is None:
             r = np.argmax(explained_variance >= variance_threshold) + 1  # Retain enough modes
@@ -126,7 +125,7 @@ data_matrix = eof.load_csv('data/tides30k.csv')
 # %%
 # Perform EOF decomposition
 
-eof.compute_eof(r=288)
+eof.compute_eof()
 
 # Display the Leading EOFs (L)
 L, _ = eof.get_eofs()  # Get the EOFs (L) and eigenvalues (U)
@@ -216,6 +215,8 @@ plt.xlabel('EOF Amplitude')
 plt.ylabel('Frequency')
 plt.legend()
 plt.show()
+
+
 
 
 
