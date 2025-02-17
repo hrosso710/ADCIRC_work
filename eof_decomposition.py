@@ -70,7 +70,6 @@ class EOFDecomposition:
         # Step 2: Compute sample covariance matrix
         N = X.shape[1]  # Number of time steps
         P = (1 / (N - 1)) * X @ X.T  # Sample covariance matrix
-        self.P = P
 
         # Step 3: Eigenvalue decomposition
         eigenvalues, eigenvectors = np.linalg.eigh(P)  # Use eigh (since P is symmetric)
@@ -92,7 +91,7 @@ class EOFDecomposition:
         self.L = eigenvectors[:, :r]
         self.U = np.diag(eigenvalues[:r])
         self.explained_variance = explained_variance[:r]
-
+        self.P = P
 
     def get_eofs(self):
         """
@@ -115,11 +114,18 @@ class EOFDecomposition:
         if self.explained_variance is None:
             raise ValueError("EOF decomposition has not been computed yet. Call compute_eof() first.")
         return self.explained_variance
+    
+    def get_P(self):
+        if self.P is None:
+            raise ValueError("EOF decomposition has not been computed yet. Call compute_eof() first.")
+        return self.P
+        
+
 
 
 # %%%
-eof = EOFDecomposition(filename='data/tides30k.csv')
-data_matrix = eof.load_csv('data/tides30k.csv')
+eof = EOFDecomposition(filename='data/tides/tides30k.csv')
+data_matrix = eof.load_csv('data/tides/tides30k.csv')
 
 
 # %%
@@ -141,6 +147,10 @@ print(U)
 explained_variance = eof.get_variance_explained()
 print("\nExplained Variance:")
 print(explained_variance)
+
+P = eof.get_P()
+print("\nTrace of P:")
+print(np.trace(P))
 
 
 # %%
